@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucky Draw</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+    }
+
+    #lottery-container {
+      text-align: center;
+      padding: 40px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    #result {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #e74c3c;
+      transform: scale(1);
+      transition: transform 0.1s ease-in-out;
+    }
+
+    .lottery-btn {
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #2ecc71;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+      margin: 10px;
+    }
+
+    .lottery-btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .lottery-btn:hover {
+      background-color: #27ae60;
+    }
+
+    #winners-list {
+      font-size: 20px;
+      margin-top: 20px;
+      text-align: left;
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: auto;
+      max-height: 200px;
+    }
+
+    #winners-list p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="lottery-container">
+    <div id="result">抽奖结果将显示在这里</div>
+    <button id="lottery-btn1" class="lottery-btn" onclick="startLottery(1)">一等奖</button>
+    <button id="lottery-btn2" class="lottery-btn" onclick="startLottery(2)">二等奖</button>
+    <button id="lottery-btn3" class="lottery-btn" onclick="startLottery(3)">三等奖</button>
+    <div id="winners-list"></div>
+  </div>
+
+  <script>
+    const firstNames = ['张', '李', '王', '赵', '陈', '刘', '周', '吴', '黄', '徐', '孙', '马', '朱', '胡', '郭', '何', '高', '林',
+      '罗', '郑'
+    ];
+    const lastNames = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+    const guests = generateGuests(firstNames, lastNames, 500);
+
+    const firstPrizeWinners = [];
+    const secondPrizeWinners = [];
+    const thirdPrizeWinners = [];
+    const prizeWinners = []
+    let firstPrizeClicked = false;
+    let secondPrizeClicked = false;
+    let thirdPrizeClicked = false;
+    let lotteryInterval; // 存储定时器标识
+
+    function generateGuests(firstNames, lastNames, count) {
+      const generatedGuests = [];
+      for (let i = 0; i < count; i++) {
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+        generatedGuests.push(`${firstName}${lastName}`);
+      }
+      return generatedGuests;
+    }
+
+    function getRandomGuest() {
+      const index = Math.floor(Math.random() * guests.length);
+      return guests.splice(index, 1)[0];
+    }
+
+    function startLottery(prizeLevel) {
+      const resultElement = document.getElementById('result');
+      const winnersListElement = document.getElementById('winners-list');
+      let lotteryBtn;
+      let numWinners = 0;
+      let prizeType = '';
+      let prizeWinners = null;
+
+      if (prizeLevel === 1 && firstPrizeClicked) {
+        alert('一等奖已经抽过啦！');
+        return;
+      } else if (prizeLevel === 2 && secondPrizeClicked) {
+        alert('二等奖已经抽过啦！');
+        return;
+      } else if (prizeLevel === 3 && thirdPrizeClicked) {
+        alert('三等奖已经抽过啦！');
+        return;
+      }
+
+      switch (prizeLevel) {
+        case 1:
+          numWinners = 3;
+          prizeType = '一等奖';
+          prizeWinners = firstPrizeWinners;
+          lotteryBtn = document.getElementById('lottery-btn1');
+          firstPrizeClicked = true;
+          break;
+        case 2:
+          numWinners = 4;
+          prizeType = '二等奖';
+          prizeWinners = secondPrizeWinners;
+          lotteryBtn = document.getElementById('lottery-btn2');
+          secondPrizeClicked = true;
+          break;
+        case 3:
+          numWinners = 5;
+          prizeType = '三等奖';
+          prizeWinners = thirdPrizeWinners;
+          lotteryBtn = document.getElementById('lottery-btn3');
+          thirdPrizeClicked = true;
+          break;
+        default:
+          break;
+      }
+
+      resultElement.textContent = '';
+      winnersListElement.textContent = '';
+      lotteryBtn.disabled = true;
+
+      // 存储定时器标识
+      lotteryInterval = simulateLottery(resultElement, lotteryBtn, prizeWinners, prizeType, winnersListElement,
+        numWinners);
+    }
+
+    function simulateLottery(resultElement, lotteryBtn, winnersArray, prizeType, winnersListElement, numWinners) {
+      const totalFrames = 100; // 总帧数
+      let currentFrame = 0;
+      let intervalTime = 40; // 初始间隔时间，单位毫秒
+      let currentWinners = [];
+
+      function lotteryAnimation() {
+
+        resultElement.textContent = `${prizeType}：${getRandomGuest()}`;
+        resultElement.style.transform = `scale(${1 + currentFrame / totalFrames})`; // 逐渐增加缩放比例
+        currentFrame++;
+
+        if (currentFrame === totalFrames) {
+          // 获取抽奖嘉宾
+          for (let num = 0; num < numWinners; num++) {
+            const currentWinner = getRandomGuest();
+            // 去重
+            if (winnersArray.indexOf(currentWinner) == -1 && prizeWinners.indexOf(currentWinner) == -1) {
+              winnersArray.push(currentWinner);
+              continue;
+            }
+            num -= 1;
+
+          }
+          // 存储获奖嘉宾名单
+          prizeWinners.push(...winnersArray);
+          displayResult(winnersArray, winnersListElement);
+          clearInterval(lotteryInterval); // 使用存储的定时器标识
+          resultElement.textContent = '抽奖完毕'
+          // console.log(prizeWinners);
+
+        }
+
+        // 逐渐增加时间间隔，使速度逐渐减缓
+        intervalTime += 10;
+      }
+
+      const interval = setInterval(lotteryAnimation, intervalTime);
+
+      // 返回 interval，以便后续清除
+      return interval;
+    }
+
+    function displayResult(winnersArray, winnersListElement) {
+      winnersArray.forEach(winner => {
+        const listItem = document.createElement('p');
+        listItem.textContent = winner;
+        winnersListElement.appendChild(listItem);
+      });
+    }
+  </script>
+</body>
+
+</html>
