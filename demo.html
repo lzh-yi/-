@@ -209,8 +209,15 @@
     }
 
     function displayResult(winnersArray, winnersListElement) {
+      // winnersListElement.appendChild(<p>获奖名单</p>)
       winnersArray.forEach(winner => {
         const listItem = document.createElement('p');
+        listItem.style.color = '#e74c3c';
+        listItem.style.fontWeight = 'bold';
+        listItem.style.fontSize = '25px';
+        listItem.style.color = '#e74c3c';
+        listItem.style.textAlign = 'center';
+
         listItem.textContent = winner;
         winnersListElement.appendChild(listItem);
       });
